@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Интерактивный тест: Тактический арсенал</title>
+    <style>
+        /* БАЗОВЫЕ НАСТРОЙКИ И АНТИЧИТ */
+        :root {
+            --bg-color: #070a12;
+            --surface-color: #0d121f;
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --accent-main: #0284c7;
+            --accent-hover: #38bdf8;
+            --danger-color: #ef4444;
+            --success-color: #10b981;
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none !important; /* ЗАПРЕТ ВЫДЕЛЕНИЯ */
+            -webkit-user-select: none !important;
+            -moz-user-select: none !important;
+            -ms-user-select: none !important;
+            -webkit-touch-callout: none !important; /* ЗАПРЕТ МЕНЮ iOS */
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        }
+
+        /* КОНТЕЙНЕРЫ */
+        .app-container {
+            max-width: 800px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* HEADER & PROGRESS */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .test-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--accent-hover);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .progress-indicator {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-main), var(--accent-hover));
+            width: 0%;
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* STEP 1: ВОПРОС */
+        .question-block {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 30px 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            transition: opacity 0.3s ease;
+        }
+
+        .question-text {
+            font-size: 1.25rem;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        .meta-tag {
+            display: inline-block;
+            background: rgba(2, 132, 199, 0.15);
+            color: var(--accent-hover);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        /* STEP 2: ОТВЕТЫ */
+        .answers-block {
+            display: none; /* Скрыто по умолчанию - Аккордеон */
+            flex-direction: column;
+            gap: 15px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .answer-btn {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .answer-btn:hover {
+            border-color: var(--accent-main);
+            background: rgba(2, 132, 199, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .answer-btn:active {
+            transform: translateY(0);
+        }
+
+        .answer-letter {
+            font-weight: bold;
+            color: var(--accent-hover);
+            margin-right: 15px;
+            font-size: 1.2rem;
+            min-width: 25px;
+        }
+
+        /* КНОПКИ УПРАВЛЕНИЯ */
+        .action-btn {
+            background: var(--accent-main);
+            color: white;
+            border: none;
+            padding: 18px 30px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .action-btn:hover {
+            background: var(--accent-hover);
+            box-shadow: 0 6px 20px rgba(56, 189, 248, 0.4);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            box-shadow: none;
+            margin-top: 20px;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: none;
+        }
+
+        /* ЭКРАНЫ СТАРТА И ФИНАЛА */
+        .intro-screen, .result-screen {
+            text-align: center;
+            padding: 40px 20px;
+            background: var(--surface-color);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .intro-title, .result-title {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            color: var(--accent-hover);
+        }
+
+        .intro-desc {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .result-score {
+            font-size: 4rem;
+            font-weight: 800;
+            margin: 20px 0;
+            text-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 30px;
+            border: 8px solid;
+            font-size: 3rem;
+            font-weight: bold;
+        }
+
+        .grade-5 { border-color: var(--success-color); color: var(--success-color); }
+        .grade-4 { border-color: #fbbf24; color: #fbbf24; }
+        .grade-3 { border-color: #f59e0b; color: #f59e0b; }
+        .grade-2 { border-color: var(--danger-color); color: var(--danger-color); }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-box {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        .stat-val { font-size: 1.5rem; font-weight: bold; }
+        .stat-label { font-size: 0.9rem; color: var(--text-secondary); }
+
+        /* BLACKOUT OVERLAY (ANTI-CHEAT) */
+        #blackout-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #000;
+            z-index: 9999;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: var(--danger-color);
+            text-align: center;
+            padding: 20px;
+        }
+
+        .warning-icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+        }
+
+        .warning-text {
+            font-size: 2rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+        }
+        
+        .warning-subtext {
+            font-size: 1.2rem;
+            color: #fff;
+        }
+
+        /* Утилиты */
+        .hidden { display: none !important; }
+        
+        @media (max-width: 600px) {
+            .app-container { padding: 15px; }
+            .question-block { padding: 20px 15px; }
+            .question-text { font-size: 1.1rem; }
+            .answer-btn { padding: 15px; font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- BLACKOUT ЭКРАН -->
+    <div id="blackout-overlay">
+        <div class="warning-icon">⚠️</div>
+        <div class="warning-text">ФИКСАЦИЯ ЭКРАНА ЗАПРЕЩЕНА!</div>
+        <div class="warning-subtext">Попытка обхода защиты. Текущий вопрос аннулирован (0 баллов).</div>
+    </div>
+
+    <div class="app-container">
+        
+        <!-- СТАРТОВЫЙ ЭКРАН -->
+        <div id="intro-screen" class="intro-screen">
+            <h1 class="intro-title">Тактический арсенал</h1>
+            <p class="intro-desc">Защищенный тест. Предмет: ОБЗР (Огневая подготовка).<br>15 случайных вопросов. Уровень сложности: ниже среднего.<br><br><b>ВНИМАНИЕ:</b> Любая попытка сделать скриншот, свернуть браузер или открыть шторку уведомлений приведет к мгновенному сгоранию текущего вопроса (0 баллов).</p>
+            <button class="action-btn" onclick="startTest()">Начать тестирование ➔</button>
+        </div>
+
+        <!-- ОСНОВНОЙ ИНТЕРФЕЙС ТЕСТА -->
+        <div id="test-interface" class="hidden">
+            <div class="header">
+                <div class="test-title">ОБЗР / Огневая подготовка</div>
+                <div class="progress-indicator"><span id="current-q-num">1</span> / 15</div>
+            </div>
+            
+            <div class="progress-bar-container">
+                <div id="progress-bar" class="progress-bar"></div>
+            </div>
+
+            <!-- ШАГ 1: ВОПРОС -->
+            <div id="step-1">
+                <div class="question-block" id="question-block">
+                    <span id="q-meta" class="meta-tag">Категория</span>
+                    <div id="q-text" class="question-text">Текст вопроса будет здесь...</div>
+                </div>
+                <button class="action-btn" onclick="showStep2()">Перейти к вариантам ответов ➔</button>
+            </div>
+
+            <!-- ШАГ 2: ОТВЕТЫ -->
+            <div id="step-2" class="answers-block">
+                <div id="answers-container">
+                    <!-- Кнопки ответов генерируются JS -->
+                </div>
+                <button class="action-btn btn-secondary" onclick="showStep1()">⬅ Вернуться к чтению вопроса</button>
+            </div>
+        </div>
+
+        <!-- ФИНАЛЬНЫЙ ЭКРАН -->
+        <div id="result-screen" class="result-screen hidden">
+            <h2 class="result-title">Сессия завершена</h2>
+            
+            <div id="grade-circle" class="score-circle">5</div>
+            
+            <div class="stat-grid">
+                <div class="stat-box">
+                    <div id="res-correct" class="stat-val">15</div>
+                    <div class="stat-label">Верных ответов</div>
+                </div>
+                <div class="stat-box">
+                    <div id="res-percent" class="stat-val">100%</div>
+                    <div class="stat-label">Результативность</div>
+                </div>
+            </div>
+
+            <p id="res-analysis" class="intro-desc" style="margin-bottom: 0; font-weight: bold;"></p>
+        </div>
+
+    </div>
+
+    <script>
+        /* ==========================================
+           БАНК ВОПРОСОВ (45 шт. - Тактический арсенал)
+           ========================================== */
+        const allQuestions = [
+            { tag: 'Метафора', q: 'С чем сравнивается современный бой на самом первом слайде брифинга?', ans: ['С запутанным карточным турниром.', 'Со сложной шахматной партией.', 'Со спортивной командной эстафетой.', 'С обычной виртуальной видеоигрой.'], correct: 1 },
+            { tag: 'Суть', q: 'Как презентация описывает настоящее предназначение личного оружия бойца?', ans: ['Это тяжелая ноша для солдата.', 'Это красивый металлический аксессуар.', 'Это продолжение руки и гарант выживания.', 'Это просто кусок холодного металла.'], correct: 2 },
+            { tag: 'Роли', q: 'Какое тактическое прозвище носит штурмовая винтовка АК-12?', ans: ['Непробиваемый огневой щит.', 'Универсальный солдат отряда.', 'Меткий хирург поля боя.', 'Последний аргумент в споре.'], correct: 1 },
+            { tag: 'ТТХ', q: 'Патроны какого калибра использует автомат АК-12?', ans: ['Калибр 5.45 миллиметров.', 'Калибр 7.62 миллиметра.', 'Калибр 9х19 миллиметров.', 'Калибр 12.7 миллиметров.'], correct: 0 },
+            { tag: 'Особенности', q: 'В чем заключается главный плюс патрона калибра 5.45 мм для АК-12?', ans: ['Он стреляет абсолютно бесшумно.', 'Идеальный баланс скорости и легкая отдача.', 'Он ослепляет врага при выстреле.', 'Он способен пробивать толстые бетонные стены.'], correct: 1 },
+            { tag: 'Эргономика', q: 'Зачем автомату АК-12 нужен телескопический приклад?', ans: ['Чтобы оружие красивее смотрелось в руках.', 'Для стрельбы из-за угла без прицеливания.', 'Он идеально подгоняется под надетую броню.', 'Чтобы максимально уменьшить вес автомата.'], correct: 2 },
+            { tag: 'Оптика', q: 'Какая деталь на корпусе позволяет установить прицел на АК-12?', ans: ['Гладкая чугунная поверхность.', 'Специальные планки Пикатинни.', 'Длинная оптическая трубка.', 'Дополнительный боковой кронштейн.'], correct: 1 },
+            { tag: 'Кейс-ситуация', q: 'Что будет, если АК-12 случайно упадет в жидкую болотную грязь?', ans: ['Автомат навсегда выйдет из строя.', 'Потребуется срочный ремонт в мастерской.', 'Он продолжит стрелять совершенно безупречно.', 'Ствол автомата мгновенно перегреется и лопнет.'], correct: 2 },
+            { tag: 'Выживаемость', q: 'Какое физическое свойство подчеркивается при описании автомата АК-12?', ans: ['Ледяной холод вороненой стали.', 'Приятное тепло деревянного приклада.', 'Легкость пластиковых деталей корпуса.', 'Яркий блеск хромированного ствола.'], correct: 0 },
+            
+            { tag: 'Роли', q: 'Какое меткое прозвище получила снайперская винтовка СВД?', ans: ['Надежный огневой щит.', 'Универсальный солдат спецназа.', 'Меткий хирург поля боя.', 'Тяжелая карманная артиллерия.'], correct: 2 },
+            { tag: 'ТТХ', q: 'Какой крупный калибр использует снайперская винтовка СВД?', ans: ['Калибр 5.45 миллиметров.', 'Калибр 7.62 миллиметра.', 'Калибр 9х19 миллиметров.', 'Калибр 12 калибра (дробь).'], correct: 1 },
+            { tag: 'Мощь', q: 'Что способна сделать тяжелая пуля калибра 7.62 мм?', ans: ['Мгновенно расплавить металл танка.', 'Пробить легкие укрытия противника.', 'Бесшумно поразить цель в воде.', 'Отскочить от обычного деревянного щита.'], correct: 1 },
+            { tag: 'ТТХ', q: 'Чему равна максимальная прицельная дальность стрельбы из СВД?', ans: ['Всего около трехсот метров.', 'До тысячи трехсот метров.', 'Почти три тысячи метров.', 'Не более пятидесяти метров.'], correct: 1 },
+            { tag: 'Метафора', q: 'С чем наглядно сравнивается дистанция в 1300 метров?', ans: ['С высотой полета пассажирского самолета.', 'С длиной десяти футбольных полей.', 'С расстоянием до ближайшего города.', 'С глубиной самого глубокого океана.'], correct: 1 },
+            { tag: 'Оптика', q: 'Какую важную роль выполняет прицел ПСО-1 для всего отряда?', ans: ['Освещает дорогу в полной темноте.', 'Работает как глаза всего отряда.', 'Подавляет сигнал вражеских раций.', 'Автоматически наводится на тепло.'], correct: 1 },
+            { tag: 'Метафора', q: 'Настолько хороша оптика СВД, что через нее можно даже...', ans: ['Разглядеть звезды на ночном небе.', 'Увидеть сквозь толстые кирпичные стены.', 'Прочитать эмоции противника издалека.', 'Сделать красивую фотографию пейзажа.'], correct: 2 },
+            { tag: 'Тактика', q: 'Какая главная философия у снайпера с винтовкой СВД?', ans: ['Много шума и плотный шквальный огонь.', 'Один точный выстрел — минус одна угроза.', 'Стрельба на бегу прямо в гуще врагов.', 'Использование оружия только для самообороны.'], correct: 1 },
+            
+            { tag: 'Роли', q: 'Как уважительно называют тяжелый пулемет «Печенег»?', ans: ['Последний спасительный аргумент.', 'Универсальный штурмовой солдат.', 'Непробиваемый огневой щит.', 'Бесшумный хирург поля боя.'], correct: 2 },
+            { tag: 'Тактика', q: 'В чем состоит главная задача пулеметчика в бою?', ans: ['Быстро добежать до вражеского окопа.', 'Создать плотную непробиваемую стену свинца.', 'Сделать один незаметный меткий выстрел.', 'Разминировать сложную бомбу в здании.'], correct: 1 },
+            { tag: 'Особенности', q: 'Благодаря чему ствол пулемета «Печенег» не перегревается в долгом бою?', ans: ['Благодаря специальной системе охлаждения ствола.', 'Потому что из него стреляют очень редко.', 'Пулемет сделан из особого космического пластика.', 'Ствол нужно постоянно поливать холодной водой.'], correct: 0 },
+            { tag: 'Боезапас', q: 'Каким образом патроны подаются в пулемет «Печенег»?', ans: ['С помощью маленьких пистолетных обойм.', 'Через непрерывную пулеметную ленту.', 'Заряжаются по одному патрону вручную.', 'Используются круглые барабанные магазины.'], correct: 1 },
+            { tag: 'Эффект', q: 'Как мощный звук выстрелов «Печенега» воздействует на противника?', ans: ['Вызывает смех и желание подойти поближе.', 'Заставляет вжаться в землю и не поднимать головы.', 'Усыпляет бдительность вражеского снайпера.', 'Никак не действует, он стреляет тихо.'], correct: 1 },
+            { tag: 'Метафора', q: 'Звук пулемета описывается как «басовитый рокот». Что этот звук делает?', ans: ['Вибрирует прямо в груди человека.', 'Лопает стеклянные окна в домах.', 'Глушит всю радиосвязь в радиусе километра.', 'Привлекает внимание диких животных леса.'], correct: 0 },
+            { tag: 'Командная работа', q: 'Кого в первую очередь прикрывает пулеметчик своим огнем?', ans: ['Вражеских солдат, сдающихся в плен.', 'Штурмовиков, пока они меняют свою позицию.', 'Мирных жителей, спрятавшихся в подвале.', 'Пилотов пролетающих мимо вертолетов.'], correct: 1 },
+            
+            { tag: 'Роли', q: 'Какое тактическое прозвище носит пистолет Ярыгина (ПЯ)?', ans: ['Последний веский аргумент в бою.', 'Мощная карманная артиллерия отряда.', 'Огневой щит для штурмовой группы.', 'Глаза и уши разведывательного дозора.'], correct: 0 },
+            { tag: 'Тип оружия', q: 'К какому классу относится пистолет Ярыгина?', ans: ['Тяжелое оружие дальнего поражения.', 'Основное оружие для стрельбы в поле.', 'Вторичное оружие для ближнего боя (CQB).', 'Специальное оружие для уничтожения танков.'], correct: 2 },
+            { tag: 'ТТХ', q: 'Каким калибром стреляет пистолет Ярыгина?', ans: ['Крупным калибром 12.7 миллиметров.', 'Снайперским калибром 7.62 миллиметра.', 'Автоматным калибром 5.45 миллиметров.', 'Пистолетным калибром 9х19 миллиметров.'], correct: 3 },
+            { tag: 'Боезапас', q: 'Сколько патронов помещается в один стандартный магазин «Грача»?', ans: ['Ровно восемь патронов.', 'Ровно восемнадцать патронов.', 'Ровно тридцать патронов.', 'Ровно сорок пять патронов.'], correct: 1 },
+            { tag: 'Тактика', q: 'Для каких локаций пистолет Ярыгина подходит лучше всего?', ans: ['Для стрельбы в широком открытом поле.', 'Для скоростных дуэлей в тесных коридорах.', 'Для подавления пулеметной точки издалека.', 'Для охоты на диких зверей в густом лесу.'], correct: 1 },
+            { tag: 'Мощь', q: 'Какая важная деталь есть внутри пули пистолета Ярыгина?', ans: ['Небольшой заряд взрывчатого вещества.', 'Прочный пробивной стальной сердечник.', 'Капсула со слезоточивым газом.', 'Яркий светящийся трассер для ночи.'], correct: 1 },
+            { tag: 'Метафора', q: 'Как пистолет «Грач» справляется с кевларовыми бронежилетами?', ans: ['Оставляет на них лишь легкие царапины.', 'Вскрывает их как острый консервный нож.', 'Пули просто отскакивают от прочной ткани.', 'Запутывается в прочных нитях кевлара.'], correct: 1 },
+            
+            { tag: 'Роли', q: 'Как солдаты уважительно называют ручные гранаты?', ans: ['Последний аргумент командира.', 'Мощная карманная артиллерия.', 'Летающие стальные сюрпризы.', 'Тяжелый пехотный огневой щит.'], correct: 1 },
+            { tag: 'ТТХ', q: 'На какое примерное расстояние боец может бросить любую гранату руками?', ans: ['Не дальше десяти коротких метров.', 'Примерно на сорок средних метров.', 'Ровно на сто пятьдесят метров.', 'На расстояние свыше трехсот метров.'], correct: 1 },
+            { tag: 'Внешний вид', q: 'По какому признаку можно мгновенно узнать наступательную гранату РГД-5?', ans: ['У нее абсолютно гладкий круглый корпус.', 'У нее чугунный и ребристый корпус.', 'Она выкрашена в яркий красный цвет.', 'Она имеет форму длинной плоской палки.'], correct: 0 },
+            { tag: 'ТТХ', q: 'На какое расстояние разлетаются легкие осколки от гранаты РГД-5?', ans: ['Всего на пять безопасных метров.', 'Примерно на двадцать пять метров.', 'Ровно на сто длинных метров.', 'Целых двести смертоносных метров.'], correct: 1 },
+            { tag: 'Тактика', q: 'Почему наступательную гранату РГД-5 безопасно бросать прямо на бегу?', ans: ['Она вообще не разрывается на осколки.', 'Радиус разлета осколков меньше дальности броска.', 'Она взрывается только через пять минут.', 'Ее осколки сделаны из мягкого пластика.'], correct: 1 },
+            { tag: 'Внешний вид', q: 'Как визуально отличить мощную оборонительную гранату Ф-1?', ans: ['Это гладкий пластиковый зеленый шар.', 'Это тяжелый ребристый чугунный «лимон».', 'У нее есть маленькие крылышки для полета.', 'Она длинная и похожа на фонарик.'], correct: 1 },
+            { tag: 'ТТХ', q: 'Каков максимальный радиус разлета тяжелых осколков гранаты Ф-1?', ans: ['Не более пятнадцати коротких метров.', 'Ровно сорок метров от места взрыва.', 'Опасные двести метров во все стороны.', 'Почти тысяча метров по открытому полю.'], correct: 2 },
+            { tag: 'Тактика', q: 'Из какого укрытия разрешается бросать оборонительную гранату Ф-1?', ans: ['Из-за тонкого деревянного забора на даче.', 'Только из глубокого окопа или бетонной стены.', 'Стоя в полный рост посреди чистого поля.', 'Спрыгивая с крыши невысокого здания.'], correct: 1 },
+            { tag: 'Безопасность', q: 'Что произойдет, если бросить гранату Ф-1 в чистом поле на бегу?', ans: ['Осколки гарантированно накроют самого бросающего.', 'Граната просто не взорвется от удара об землю.', 'Взрыв будет очень тихим и незаметным для врага.', 'Враги успеют легко поймать ее и бросить обратно.'], correct: 0 },
+            
+            { tag: 'Метафора', q: 'Чем реальная боевая жизнь отличается от любимой видеоигры?', ans: ['Оружие в жизни весит намного меньше.', 'В реальной жизни нет кнопки респауна.', 'Патроны в жизни никогда не заканчиваются.', 'Гранаты взрываются совершенно без звука.'], correct: 1 },
+            { tag: 'Правила', q: 'Любое огнестрельное оружие всегда считается заряженным, пока ты...', ans: ['Не поставишь его на надежный предохранитель.', 'Лично не проверишь, что патронник абсолютно пуст.', 'Не нажмешь на спусковой крючок в сторону потолка.', 'Не уберешь его обратно в оружейную комнату.'], correct: 1 },
+            { tag: 'Безопасность', q: 'Где обязан лежать твой указательный палец, если ты еще не готов стрелять?', ans: ['Слегка прижимать металлический спусковой крючок.', 'Быть засунутым внутрь защитной спусковой скобы.', 'Строго и прямо на металлической ствольной коробке.', 'Спрятан в карман, чтобы случайно не выстрелить.'], correct: 2 },
+            { tag: 'Правила', q: 'Куда категорически запрещается направлять ствол оружия даже в шутку?', ans: ['На специальные бумажные тренировочные мишени.', 'На старые разрушенные и заброшенные здания.', 'На любого человека или то, что не готов уничтожить.', 'На песчаный земляной вал на стрельбище.'], correct: 2 },
+            { tag: 'Философия', q: 'Чью волю и намерения на самом деле отражает любое бездушное оружие?', ans: ['Разум и ответственность того, кто держит его в руках.', 'Характер инженера, который собирал этот автомат.', 'Командира, который отдал приказ идти в атаку.', 'Искусственного интеллекта военной базы данных.'], correct: 0 }
+        ];
+
+        /* ==========================================
+           ПЕРЕМЕННЫЕ СОСТОЯНИЯ
+           ========================================== */
+        const TOTAL_QUESTIONS = 15;
+        let sessionQuestions = [];
+        let currentIdx = 0;
+        let score = 0;
+        let securityActive = false;
+        let testFinished = false;
+
+        /* ==========================================
+           АЛГОРИТМ ФИШЕРА-ЙЕТСА (ПЕРЕМЕШИВАНИЕ)
+           ========================================== */
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex != 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        /* ==========================================
+           ЛОГИКА ТЕСТА
+           ========================================== */
+        function startTest() {
+            let shuffledBank = shuffle([...allQuestions]);
+            sessionQuestions = shuffledBank.slice(0, TOTAL_QUESTIONS);
+            
+            sessionQuestions = sessionQuestions.map(qObj => {
+                let options = qObj.ans.map((text, idx) => ({ text, isCorrect: idx === qObj.correct }));
+                options = shuffle(options);
+                return {
+                    ...qObj,
+                    options: options
+                };
+            });
+
+            document.getElementById('intro-screen').classList.add('hidden');
+            document.getElementById('test-interface').classList.remove('hidden');
+            
+            setTimeout(() => { securityActive = true; }, 1500);
+
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            if (currentIdx >= TOTAL_QUESTIONS) {
+                finishTest();
+                return;
+            }
+
+            const q = sessionQuestions[currentIdx];
+            
+            document.getElementById('current-q-num').innerText = currentIdx + 1;
+            document.getElementById('progress-bar').style.width = `${(currentIdx / TOTAL_QUESTIONS) * 100}%`;
+
+            document.getElementById('q-meta').innerText = q.tag;
+            document.getElementById('q-text').innerText = q.q;
+
+            const letters = ['А', 'Б', 'В', 'Г'];
+            const container = document.getElementById('answers-container');
+            container.innerHTML = '';
+            
+            q.options.forEach((opt, idx) => {
+                let btn = document.createElement('button');
+                btn.className = 'answer-btn';
+                btn.innerHTML = `<span class="answer-letter">${letters[idx]}</span><span>${opt.text}</span>`;
+                btn.onclick = () => handleAnswer(opt.isCorrect);
+                container.appendChild(btn);
+            });
+
+            showStep1();
+        }
+
+        function showStep1() {
+            document.getElementById('step-1').style.display = 'block';
+            document.getElementById('step-2').style.display = 'none';
+            document.getElementById('step-2').style.opacity = '0';
+        }
+
+        function showStep2() {
+            document.getElementById('step-1').style.display = 'none';
+            const step2 = document.getElementById('step-2');
+            step2.style.display = 'flex';
+            setTimeout(() => { step2.style.opacity = '1'; }, 50);
+        }
+
+        function handleAnswer(isCorrect) {
+            if (isCorrect) score++;
+            currentIdx++;
+            loadQuestion();
+        }
+
+        /* ==========================================
+           ИТОГИ ТЕСТА
+           ========================================== */
+        function finishTest() {
+            testFinished = true;
+            securityActive = false;
+            document.getElementById('test-interface').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+
+            const percent = Math.round((score / TOTAL_QUESTIONS) * 100);
+            
+            document.getElementById('res-correct').innerText = score;
+            document.getElementById('res-percent').innerText = `${percent}%`;
+
+            let grade, analysis, gradeClass;
+            
+            if (percent < 50) {
+                grade = 2; gradeClass = 'grade-2';
+                analysis = 'Оценка 2. Базовые правила не усвоены. Повторите протоколы безопасности и ТТХ.';
+            } else if (percent >= 50 && percent < 75) {
+                grade = 3; gradeClass = 'grade-3';
+                analysis = 'Оценка 3. Удовлетворительно, но в реальном бою этого может не хватить. Изучите матчасть.';
+            } else if (percent >= 75 && percent < 90) {
+                grade = 4; gradeClass = 'grade-4';
+                analysis = 'Оценка 4. Хорошая подготовка. Вы уверенно знаете свой арсенал и задачи на поле боя.';
+            } else {
+                grade = 5; gradeClass = 'grade-5';
+                analysis = 'Оценка 5. Отлично! Идеальное знание тактического арсенала. Идентификация подтверждена.';
+            }
+
+            const circle = document.getElementById('grade-circle');
+            circle.innerText = grade;
+            circle.className = `score-circle ${gradeClass}`;
+            document.getElementById('res-analysis').innerText = analysis;
+        }
+
+        /* ==========================================
+           ANTI-CHEAT ENGINE (BLUR / VISIBILITY)
+           ========================================== */
+        function triggerBlackout() {
+            if (!securityActive || testFinished) return;
+            
+            const overlay = document.getElementById('blackout-overlay');
+            overlay.style.display = 'flex';
+            
+            document.getElementById('q-text').innerText = '';
+            document.getElementById('answers-container').innerHTML = '';
+            
+            currentIdx++;
+            
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                loadQuestion();
+            }, 1800);
+        }
+
+        window.addEventListener('blur', triggerBlackout);
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+                triggerBlackout();
+            }
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'F12' || 
+               (e.ctrlKey && (e.key === 'c' || e.key === 's' || e.key === 'p' || e.key === 'u' || e.key === 'i' || e.key === 'j')) ||
+               (e.metaKey && (e.key === 'c' || e.key === 's' || e.key === 'p' || e.key === 'u'))) {
+                e.preventDefault();
+            }
+        });
+
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
+    </script>
+</body>
+</html>
